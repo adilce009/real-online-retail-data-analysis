@@ -1,0 +1,136 @@
+##Activities that I did for cleaning
+  Found missing values in the Description and Customer ID columns; used the formula :
+  All the rows that have missing description also have price=0, except for one.
+  For the missing description, filled them by writing Missing Description in the Description column. 
+    - filtered Description column by keeping only the Blank ones.
+    - Wrote the 'Missing Description' in the first cell of the filtered rows
+    - Pressed Ctrl+Shift+Down arrow key (that selected all rows of the Description column). Then entered altr+Enter to fill all rows by copying 'Missing Description'
+Moved all the rows with 0 price is moved to the RemovedRows sheet
+Created a new sheet: RemovedRows; copied all the filtered rows with 0 price to it.
+Selected all the filtered rows having 'Missing Description', right click and delete rows  of entire sheet. Then removed the filter. The Original sheet now does not have
+the rows with description: Missing Descriptidoon.
+
+-- Dealing with the rows with no Customer ID: The rows with no customer IDs might be the customers who are not registered, and did the transections unanomously. 
+  I cannot remove them, rather I create a separate column and filling it with True/False for the customers with IDs/customers without an ID (usign the following 
+  formula: =Table1[@[Customer ID]]<>"" and then press Enter. This will fill the whole column with True or False.
+                                                                                                                                             
+  ### add the following to the Project Readme:
+  X% of transactions had no CustomerID; these were retained for revenue analysis but excluded from customer segmentation since they can't be attributed to 
+  an individual" — that's the kind of reasoning that makes a project look thought-through rather than just mechanically cleaned.
+                                                                                                                                             
+#### Inovoices
+The invoice numbers are not for aggression, so the data type is transformed to text. There are two types of Invoices: Invoice that starts with a C and without. 
+C stands for cancellation, meaning the transections for cancelling the order. We need to separate them to anlyze total revenue or cancellation rate or similar
+To separate, I inserted another column named Cancellation_or_not and used the following formula: =LEFT([@Invoice],1)="C"                                                                                                                                             
+                                                                                                                                             
+#### StockCode
+StockCodes are kind of mixed type; the codes for products usually starts with a 5 digit numbers. There are some other codes which do not follow this convension.
+Following the descriptions of those codes, I found that they are not for products, rather somethings or processes that are associated with the business transections.
+So I marked them and counted their numbers by using PivotTable and then inserted a column beside StockCode named Is_product. This column is supposed to mark
+the StockCode as product(True) or non-product (False). The formula I used was as follows: =ISNUMBER(VALUE(LEFT([@StockCode],5))).
+In addition, I turned the StockCode column as 'Text' to make sure no aggregation functions are used on it. 
+                                                                                                                                             
+### Quantity Column
+
+#### Observation
+- Noticed cancelled invoices (Invoice starting with "C") are associated with negative Quantity values
+- Hypothesis: negative Quantity may fully correspond to cancellations, meaning no separate 
+  cleaning action would be needed on this column beyond the existing Cancelled_or_Not flag
+
+#### Validation
+- Added helper column `Quantity_Sign` to categorize each row as "Negative" or "Non-negative":
+  `=IF([@Quantity]<0,"Negative","Non-negative")`
+- Built a PivotTable cross-tabbing `Cancelled_or_Not` (Rows) against `Quantity_Sign` (Columns), 
+  with a Count aggregation, to test whether cancellation and negative quantity align 1:1
+
+#### Finding
+- Cross-tab confirmed cancellation and negative quantity align almost perfectly, with **one exception**: 
+  a single cancelled invoice (Invoice starts with "C") had a non-negative Quantity (value: 1)
+- Investigated the row directly: StockCode = "M" (Manual entry/adjustment, already a non-product 
+  code per the `Is_Product` flag), Unit Price = 373.57, no CustomerID
+
+#### Decision
+- This row is not a genuine data inconsistency requiring a fix — it's a manual/administrative 
+  entry (StockCode "M") that happens to carry a cancellation-prefixed invoice number and a 
+  positive quantity. It was already going to be excluded from analysis as a non-product row, 
+  regardless of its invoice prefix or quantity sign
+- No separate correction or flag needed for this row specifically; it will be removed in the 
+  upcoming consolidated non-product exclusion pass, with the note: "Non-product (Manual entry) 
+  — excluded from product and customer-level analysis"
+- Decided to defer all row removals (non-product codes, this Quantity anomaly, etc.) to a single 
+  consolidated exclusion pass at the end of the flagging phase, rather than removing incrementally
+                                                                                                                                             
+### InvoiceDate Column
+
+#### Checks performed
+- Confirmed InvoiceDate is stored as a proper date/time value (not text) — required for 
+  correct sorting, filtering, and date-based calculations
+- Checked for blanks using `=COUNTBLANK(Table1[InvoiceDate])` — none found
+- Verified min/max date range using MIN/MAX to confirm data falls within the expected 
+  01/12/2009–09/12/2011 window per the dataset documentation
+
+#### Action taken
+- Added a new column `Invoice_Date_Only` using `=INT([@InvoiceDate])`, then formatted as 
+  Short Date, to strip the time-of-day component and isolate the pure date
+- Original `InvoiceDate` column (with time) retained unchanged, in case time-of-day patterns 
+  are useful later (e.g., time-of-day purchase trends)
+
+#### Rationale
+- Upcoming RFM (Recency, Frequency, Monetary) analysis requires calculating "days since last 
+  purchase" per customer — this needs a clean date value without time-of-day noise, since 
+  two purchases on the same calendar date but different times should count as the same 
+  "day" for recency purposes
+
+                                                                                                                                             ## Invoice Prefix / Sale Type Categorization
+## Invoice revisited
+### Observation
+- Found Invoice numbers fall into more than just "Normal" and "C" (Cancellation) — also 
+  discovered prefix "A" (Adjustment/bad debt entries)
+- Needed a systematic way to confirm no other prefixes existed beyond these three, rather 
+  than assuming after finding just two
+
+### Action taken
+- Added `Invoice_Prefix` helper column to extract the leading character (or "Numeric" if 
+  purely numeric):
+  `=IF(ISNUMBER(VALUE(LEFT([@Invoice],1))),"Numeric",LEFT([@Invoice],1))`
+- Applied formula across full dataset, confirmed only three categories exist: Numeric, "C", "A"
+- Built final categorization column `Sale_or_Not` (values: Normal Sale / Cancellation / 
+  Adjustment) to replace ad hoc single-letter checks
+
+### Finding
+- "A" (Adjustment) invoices: 3 rows total — all tied to StockCode "B" (Bad debt adjustment, 
+  non-product), no CustomerID, negative Price
+- "C" (Cancellation) invoices: negative Quantity in nearly all cases (1 exception previously 
+  investigated and excluded as a non-product Manual entry)
+
+### Decision
+- All "A" and non-product "C"/Manual-type rows will be included in the upcoming consolidated 
+  exclusion pass, categorized clearly by `Sale_or_Not` and `Is_Product` for transparent 
+  filtering during analysis
+                                                                                                                                            
+### Investigating Country column
+#### Checks performed
+- Confirmed no blank Country values
+- Built a PivotTable (Rows: Country, Values: Count) to surface every unique value at once, 
+  rather than relying on manual scrolling
+- Reviewed the full list for spelling inconsistencies, case mismatches, and trailing-space 
+  duplicates
+- Investigated "Channel Islands" entry — confirmed this is a legitimate, distinct territory 
+  (British Crown Dependency, separate from UK/France for shipping/customs purposes), not a 
+  data error — retained as-is
+- Confirmed "EIRE" is the dataset's legitimate label for Ireland — retained as-is, not a typo
+
+#### Discrepancy found and resolved
+- Initial count of "Unspecified" Country using `SUBTOTAL(COUNT, ...)` returned 306, but 
+  PivotTable count returned 310
+- Cause: SUBTOTAL only counts visible (non-filtered) rows, and a stray filter was active 
+  elsewhere in the table at the time, hiding 4 rows from the SUBTOTAL calculation. PivotTable 
+  counts from the full underlying source regardless of filter state, giving the correct total
+- Takeaway: PivotTable counts are more reliable than SUBTOTAL when filter state isn't 
+  explicitly verified beforehand
+
+#### Decision
+- "Unspecified" (310 rows) treated as a legitimate placeholder category (deliberately entered, 
+  not a missing/blank value) — retained in the cleaned dataset, not excluded
+- No spelling/case standardization needed after review — no inconsistent duplicates found 
+  requiring a lookup table correction
