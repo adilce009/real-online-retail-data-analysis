@@ -1,4 +1,4 @@
-
+##This log file is raw writings, not a polished version. For a more organized, polished version of the log file, please check data_cleaning_logs file 
 
 ##Activities that I did for cleaning
   Found missing values in the Description and Customer ID columns; used the formula :
