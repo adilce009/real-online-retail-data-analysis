@@ -134,3 +134,31 @@ In addition, I turned the StockCode column as 'Text' to make sure no aggregation
   not a missing/blank value) — retained in the cleaned dataset, not excluded
 - No spelling/case standardization needed after review — no inconsistent duplicates found 
   requiring a lookup table correction
+
+### Duplicate Invoice Line Items
+
+#### Approach
+- Duplicate check needed to be Invoice + StockCode combined (not Invoice alone), since one 
+  invoice legitimately has multiple product lines
+- Attempted in-table COUNTIF formula, ran into persistent errors — switched to Power Query
+
+#### Steps
+- Created `Duplicate_Check` query: grouped by Invoice + StockCode, counted rows as `Dup_Count`
+- Merged `Dup_Count` back into main `Table1` query (Left Outer join on Invoice + StockCode), 
+  expanded to bring the count into every row
+
+#### Next step
+- Filter `Dup_Count > 1` to inspect actual duplicate line items (compare Quantity/Price/Date) 
+  and decide true-duplicate vs. legitimate repeat, case by case
+
+#### Finding
+- Filtered to Dup_Count > 1 and Fully_Identical = TRUE — zero results
+- No exact/redundant duplicate line items exist in the dataset — all Invoice+StockCode 
+  groups with multiple entries differ in at least one of Quantity, Price, or InvoiceDate
+
+#### Decision
+- No rows removed. All duplicate-looking Invoice+StockCode combinations represent 
+  legitimately separate transactions (e.g., repriced items, corrections, or distinct 
+  events sharing the same invoice/product) — not data entry errors
+- No further action needed on duplicate invoices
+
