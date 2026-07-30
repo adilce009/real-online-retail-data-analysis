@@ -1,3 +1,5 @@
+
+
 ##Activities that I did for cleaning
   Found missing values in the Description and Customer ID columns; used the formula :
   All the rows that have missing description also have price=0, except for one.
