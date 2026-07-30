@@ -21,7 +21,7 @@ Take a genuinely messy, real-world transactional dataset and produce a clean, an
 
 ## Process
 
-A column-by-column audit, with every decision validated against evidence in the data rather than assumed. Full reasoning and dead-ends are documented in [`data-cleaning-log-detailed.md`](./data-cleaning-log-detailed.md).
+A column-by-column audit, with every decision validated against evidence in the data rather than assumed. Full reasoning and dead-ends are documented in [`data-cleaning-log-detailed.md`](./docs/data_cleaning_logs.md).
 
 1. **Setup** — converted raw data into an Excel Table for structured referencing and reliable filtering at scale
 2. **Description** — found blank descriptions almost entirely paired with Price = 0 and no CustomerID; confirmed these were non-product write-off entries, labeled and excluded rather than deleted outright
