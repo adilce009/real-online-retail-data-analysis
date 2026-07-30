@@ -64,6 +64,6 @@ Duplicates were defined precisely as repeated **Invoice + StockCode** combinatio
 
 ## Limitations & What I'd Do Differently
 
-*(To be completed — e.g., "with more time I'd validate country-level shipping cost anomalies" or similar reflection)*
+*(To be completed)*
 
 ---
