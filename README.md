@@ -1,6 +1,6 @@
 # Online Retail Data Cleaning <!-- & RFM Analysis--> (Excel)
 
-Cleaning, validating, and analyzing ~1 million rows of real UK online retail transaction data in Excel — culminating in an RFM (Recency, Frequency, Monetary) customer segmentation.
+Cleaning, validating, and analyzing ~1 million rows of real UK online retail transaction data in Excel. <!--  — culminating in an RFM (Recency, Frequency, Monetary) customer segmentation.-->
 
 ## Dataset
 
