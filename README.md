@@ -1,4 +1,4 @@
-# Online Retail Data Cleaning & RFM Analysis (Excel)
+# Online Retail Data Cleaning <!-- & RFM Analysis--> (Excel)
 
 Cleaning, validating, and analyzing ~1 million rows of real UK online retail transaction data in Excel — culminating in an RFM (Recency, Frequency, Monetary) customer segmentation.
 
@@ -33,12 +33,12 @@ A column-by-column audit, with every decision validated against evidence in the 
 8. **CustomerID** — flagged (not deleted) missing values, since these rows remain valid for revenue analysis but must be excluded from customer-level segmentation
 9. **Country** — audited all unique values via PivotTable; distinguished genuine inconsistencies (casing) from legitimate but unusual entries (Channel Islands, EIRE, Unspecified)
 10. **Duplicate line items** — defined duplicates precisely as repeated Invoice+StockCode pairs (not repeated invoices, which are normal); used Min/Max comparison logic in Power Query to distinguish true redundant entries from legitimately separate transactions
-
+<!--
 ## Key Findings
 
 *(To be completed once RFM analysis is finished — e.g., customer segment sizes, top segments by revenue contribution, revenue lost to cancellations, etc.)*
-
-## Screenshots
+-->
+## Screenshots (The impact of cleaning)
 
 **Description column — before and after cleaning**
 
@@ -61,9 +61,9 @@ Duplicates were defined precisely as repeated **Invoice + StockCode** combinatio
 ![Duplicate_Check Power Query table with Dup_Count and Fully_Identical columns](./images/duplicate-check.png)
 
 *(Finding: zero groups qualified as exact duplicates — every repeated Invoice+StockCode pairing differed in at least one of Price, Quantity, or Date, meaning no rows needed to be removed.)*
-
+<!--
 ## Limitations & What I'd Do Differently
 
 *(To be completed)*
-
+-->
 ---
